@@ -3,6 +3,8 @@ const app = express();
 const filmRepo = require('./repos/filmRepo')
 const userRepo = require('./repos/userRepo')
 const router = express.Router();
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
 require("dotenv").config({ path: "./server/variables.env" });
 const cors = require("cors");
@@ -17,13 +19,39 @@ const {
   } = require("./server/shared");
   const Constants = require("./server/constants");
 
+const swaggerOptions = {
+    swaggerDefinition: {
+        info: {
+            title: 'Sakila API',
+            description: 'Sakila API Information',
+            servers: ['http://localhost:4242'] 
+        }
+    },
+    apis: ['index.js']
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+
 // Configure middleware to support JSON data parsing in the request object
 app.use(express.json())
 
 // Add cors for api accesses
 app.use(cors());
 
-// Search films by genre, title or actor's last name
+// Configure swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+/**
+ * @swagger
+ * /films:
+ *  get:
+ *      description: Search films by genre, title or actor's last name
+ *      responses:
+ *          '200':
+ *              description: Get films successful.
+ *          '404':
+ *              description: No films found.
+ */
 router.route('/films')
 .get(verifyToken, (req, res, next) => {
     let filters = req.body;
