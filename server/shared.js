@@ -4,17 +4,17 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Constants = require("./constants");
 
-var getUserByUsername = (exports.getUserByUsername = async function (username) {
-  try {
-    const allUsers = []; //await jsonfile.readFile(users);
-    const filteredUserArray = allUsers.filter(
-      (user) => user.username === username
-    );
-    return filteredUserArray.length === 0 ? {} : filteredUserArray[0];
-  } catch (err) {
-    console.log("Error reading users: ", err.message);
-  }
-});
+// var getUserByUsername = (exports.getUserByUsername = async function (username) {
+//   try {
+//     const allUsers = []; //await jsonfile.readFile(users);
+//     const filteredUserArray = allUsers.filter(
+//       (user) => user.username === username
+//     );
+//     return filteredUserArray.length === 0 ? {} : filteredUserArray[0];
+//   } catch (err) {
+//     console.log("Error reading users: ", err.message);
+//   }
+// });
 
 exports.isEmptyObject = (object) => Object.entries(object).length === 0;
 
@@ -46,18 +46,18 @@ exports.getAudienceFromToken = (token) => jwt.decode(token)["aud"];
 
 exports.generateToken = async function (prevToken, userName) {
   const name = userName || getUsernameFromToken(prevToken);
-  const user = await getUserByUsername(name);
+  // const user = await getUserByUsername(name);
+  const role = 'Customer'
   const options = {
     algorithm: process.env.ALGORITHM,
     expiresIn: process.env.EXPIRY,
     issuer: process.env.ISSUER,
-    subject: userName || user.username,
+    subject: userName,
     audience:
-      user.role === "admin"
+      role === "Staff"
         ? Constants.JWT_OPTIONS.ADMIN_AUDIENCE
         : Constants.JWT_OPTIONS.MEMBER_AUDIENCE,
   };
-  console.log('secret: '+process.env.SECRET)
   return jwt.sign({}, process.env.SECRET, options);
 };
 
