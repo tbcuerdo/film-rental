@@ -1,6 +1,6 @@
 const mysql = require('../helpers/mysqlconn');
 
-const searchFilms = (data, resolve, reject) => {
+const searchFilms = (data) => {
     console.log('searchFilms...');
 
     let sql = `select film.*,
@@ -29,11 +29,7 @@ const searchFilms = (data, resolve, reject) => {
     )
     OR lower(film.title) = ?`;
 
-    mysql.exec(sql, (results) => {
-        resolve(results);
-    },(err) => {
-        reject(err)
-    },[data.genre ? data.genre : '', data.actorLastName ? data.actorLastName : '', data.title ? data.title : '']);
+    return mysql.exec(sql, [data.genre ? data.genre : '', data.actorLastName ? data.actorLastName : '', data.title ? data.title : '']);
 };
 
 const searchFilmsByActor = (data, resolve, reject) => {
@@ -70,11 +66,7 @@ const searchFilmsByActor = (data, resolve, reject) => {
         on actor.actor_id = f_actor.actor_id
         where lower(actor.first_name) = lower(?) and lower(actor.last_name) = lower(?))`;
 
-    mysql.exec(sql, (results) => {
-        resolve(results);
-    },(err) => {
-        reject(err)
-    },[data.firstName ? data.firstName : '', data.lastName ? data.lastName : '', data.firstName ? data.firstName : '', data.lastName ? data.lastName : '']);
+    return mysql.exec(sql, [data.firstName ? data.firstName : '', data.lastName ? data.lastName : '', data.firstName ? data.firstName : '', data.lastName ? data.lastName : '']);
 };
 
 let filmRepo = {

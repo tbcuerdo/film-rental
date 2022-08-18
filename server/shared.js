@@ -1,20 +1,7 @@
-//const jsonfile = require("jsonfile");
-const users = "./server/database/users.json";
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Constants = require("./constants");
-
-// var getUserByUsername = (exports.getUserByUsername = async function (username) {
-//   try {
-//     const allUsers = []; //await jsonfile.readFile(users);
-//     const filteredUserArray = allUsers.filter(
-//       (user) => user.username === username
-//     );
-//     return filteredUserArray.length === 0 ? {} : filteredUserArray[0];
-//   } catch (err) {
-//     console.log("Error reading users: ", err.message);
-//   }
-// });
+const userRepo = require("../repos/userRepo")
 
 exports.isEmptyObject = (object) => Object.entries(object).length === 0;
 
@@ -22,37 +9,21 @@ exports.isPasswordCorrect = async function (key, password) {
   return bcrypt.compare(password, key).then((result) => result);
 };
 
-exports.getAllUsers = async function () {
-  try {
-    const allUsers = []; //await jsonfile.readFile(users);
-    let updatedUsers = [];
-    allUsers.forEach((user) => {
-      updatedUsers.push({
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      });
-    });
-    return updatedUsers;
-  } catch (err) {
-    console.log("Error reading users from datastore ", err.message);
-  }
-};
-
 const getUsernameFromToken = (token) => jwt.decode(token)["sub"];
 
 exports.getAudienceFromToken = (token) => jwt.decode(token)["aud"];
 
 exports.generateToken = async function (prevToken, userName) {
+  console.log("generateToken...")
   const name = userName || getUsernameFromToken(prevToken);
-  // const user = await getUserByUsername(name);
-  const role = 'Customer'
+  const user = await userRepo.getUser(userName);
+  const role = user.role;
+  console.log("role: "+role)
   const options = {
     algorithm: process.env.ALGORITHM,
     expiresIn: process.env.EXPIRY,
     issuer: process.env.ISSUER,
-    subject: userName,
+    subject: name,
     audience:
       role === "Staff"
         ? Constants.JWT_OPTIONS.ADMIN_AUDIENCE

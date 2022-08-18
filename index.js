@@ -53,9 +53,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
  *              description: No films found.
  */
 router.route('/films')
-.get(verifyToken, (req, res, next) => {
+.get(verifyToken, async (req, res, next) => {
     let filters = req.body;
-    filmRepo.searchFilms(filters, (films) => {
+    try {
+        let films = await filmRepo.searchFilms(filters);
         if (films) {
             res.status(200).json({
                 "status": 200,
@@ -74,14 +75,17 @@ router.route('/films')
                 }
             })
         }
-    }, (err) => { next(err); });
+    } catch(err) {
+        next(err);
+    }
 });
 
 // Search films by actor's first name and/or last name
 router.route('/films/actor')
-.get(verifyToken, (req, res, next) => {
+.get(verifyToken, async (req, res, next) => {
     let filters = req.body;
-    filmRepo.searchFilmsByActor(filters, (films) => {
+    let films = await filmRepo.searchFilmsByActor(filters);
+    try {
         if (films) {
             res.status(200).json({
                 "status": 200,
@@ -100,34 +104,41 @@ router.route('/films/actor')
                 }
             })
         }
-    }, (err) => { next(err); });
+    } catch (err) {
+        next(err);
+    }
 });
 
 // login
 router.route("/login")
-.post((req, res, next) => {
+.post(async (req, res, next) => {
     let base64Encoding = req.headers.authorization.split(" ")[1];
     let credentials = Buffer.from(base64Encoding, "base64").toString().split(":");
     const username = credentials[0];
     const password = credentials[1];
-    userRepo.getUser(username,(user) => {
+
+    try {
+        let user = await userRepo.getUser(username);
         if (user && !isEmptyObject(user)) {
             isPasswordCorrect(user.password, password).then((result) => {
-            if (!result)
-            res
-                .status(401)
-                .send({ message: "username or password is incorrect" });
-            else {
-            generateToken(null, username).then((token) => {
-                res
-                .status(200)
-                .send({ username: user.username, role: user.role, token: token });
+                if (!result) {
+                    res
+                        .status(401)
+                        .send({ message: "username or password is incorrect" });
+                } else {
+                    generateToken(null, username).then((token) => {
+                        res
+                        .status(200)
+                        .send({ username: user.username, role: user.role, token: token });
+                    });
+                }
             });
-            }
-        });
-        } else
-        res.status(401).send({ message: "username or password is incorrect" });
-    }, (err) => { next(err) });
+        } else {
+            res.status(401).send({ message: "username or password is incorrect" });
+        }
+    } catch (err) {
+        next(err);
+    }
 });
 
 // logout
