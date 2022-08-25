@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-const filmRepo = require('./repos/filmRepo')
 const userRepo = require('./repos/userRepo')
 const router = express.Router();
 const swaggerJsDoc = require('swagger-jsdoc');
@@ -17,7 +16,7 @@ const {
     getAudienceFromToken,
     generateToken,
   } = require("./server/shared");
-  const Constants = require("./server/constants");
+const Constants = require("./server/constants");
 
 const swaggerOptions = {
     swaggerDefinition: {
@@ -32,6 +31,12 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
+// controllers
+const filmController = require('./controllers/filmController')
+const customerController = require('./controllers/customerController');
+const filmRepo = require('./repos/filmRepo');
+const actorController = require('./controllers/actorController');
+
 // Configure middleware to support JSON data parsing in the request object
 app.use(express.json())
 
@@ -41,73 +46,21 @@ app.use(cors());
 // Configure swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-/**
- * @swagger
- * /films:
- *  get:
- *      description: Search films by genre, title or actor's last name
- *      responses:
- *          '200':
- *              description: Get films successful.
- *          '404':
- *              description: No films found.
- */
-router.route('/films')
-.get(verifyToken, async (req, res, next) => {
-    let filters = req.body;
-    try {
-        let films = await filmRepo.searchFilms(filters);
-        if (films) {
-            res.status(200).json({
-                "status": 200,
-                "statusText": "OK",
-                "message": films.length+" films found.",
-                "data": films
-            });
-        } else {
-            res.status(404).json({
-                "status": 404,
-                "statusText": "Not found.",
-                "message": "No films matched by genre "+filters.genre+", title "+filters.title+" or actor "+filters.actorLastName,
-                "error": {
-                    "code": "NOT_FOUND",
-                    "message": "Not found"
-                }
-            })
-        }
-    } catch(err) {
-        next(err);
-    }
-});
+// films api
+router.route('/films').get(verifyToken, filmController.searchFilms);
+router.route('/films/actor').get(verifyToken, filmController.searchFilmsByActor);
+router.route('/films/all').get(verifyToken, filmController.getAllFilms);
+router.route('/films').post(verifyToken, filmController.addFilm);
+router.route('/films/:id').put(verifyToken, filmController.editFilm);
+router.route('/films/:id').delete(verifyToken, filmController.removeFilm);
 
-// Search films by actor's first name and/or last name
-router.route('/films/actor')
-.get(verifyToken, async (req, res, next) => {
-    let filters = req.body;
-    let films = await filmRepo.searchFilmsByActor(filters);
-    try {
-        if (films) {
-            res.status(200).json({
-                "status": 200,
-                "statusText": "OK",
-                "message": films.length+" films found.",
-                "data": films
-            });
-        } else {
-            res.status(404).json({
-                "status": 404,
-                "statusText": "Not found.",
-                "message": "No films matched by first name "+filters.firstName+" or last name "+filters.lastName,
-                "error": {
-                    "code": "NOT_FOUND",
-                    "message": "Not found"
-                }
-            })
-        }
-    } catch (err) {
-        next(err);
-    }
-});
+// customer api
+router.route('/customers').get(verifyToken, customerController.searchCustomers);
+
+// actors api
+router.route('/actors').post(verifyToken, actorController.addActor);
+router.route('/actors/:id').put(verifyToken, actorController.editActor);
+router.route('/actors/:id').delete(verifyToken, actorController.removeActor);
 
 // login
 router.route("/login")

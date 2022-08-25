@@ -5,7 +5,7 @@ const exec = async (sql, values) => {
     let connection;
     return new Promise(function(resolve, reject) {
         connection = mysql.createConnection({
-            host     : '172.17.0.4',
+            host     : '172.17.0.2',
             user     : 'root',
             password : 'my-secret-pw',
             database : 'sakila'

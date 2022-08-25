@@ -1,4 +1,93 @@
 const mysql = require('../helpers/mysqlconn');
+const _ = require("lodash");
+
+const getAllFilms = () => {
+    console.log('getAllFilms...')
+    let sql = `select * from film`;
+    return mysql.exec(sql,[]);
+}
+
+const insert = async (data) => {
+    console.log('insert');
+    let sql = `insert into film SET ?`;
+
+    let data2 = {};
+    _.mapKeys(data, (v, k) => {
+            data2[_.snakeCase(k)] = v;
+        }
+    );
+
+    let results = await mysql.exec(sql,data2);
+    return results.insertId;
+};
+
+const getById = async (id) => {
+    console.log('getById...');
+    let sql = `select * from film where film_id = ?`;
+    let results = await mysql.exec(sql,[id]);
+    if (results.length > 0)
+        return results[0];
+    return null;
+};
+
+const buildUpdateData = (id, currentData, updateData) => {
+    return [
+        updateData.title ? updateData.title : currentData.title,
+        updateData.description ? updateData.description : currentData.description,
+        updateData.releaseYear ? updateData.releaseYear : currentData.release_year,
+        updateData.languageId ? updateData.languageId : currentData.language_id,
+        updateData.originalLanguageId ? updateData.originalLanguageId : currentData.original_language_id,
+        updateData.rentalDuration ? updateData.rentalDuration : currentData.rental_duration,
+        updateData.rentalRate ? updateData.rentalRate : currentData.rental_rate,
+        updateData.length ? updateData.length : currentData.length,
+        updateData.replacementCost ? updateData.replacementCost : currentData.replacement_cost,
+        updateData.rating ? updateData.rating : currentData.rating,
+        updateData.specialFeatures ? updateData.specialFeatures : currentData.special_features,
+        id
+    ];
+};
+
+const update = async (id, updateData) => {
+    console.log('update...');
+    let currentData = await getById(id);
+    let affectedRows = 0;
+    let sql = `UPDATE film SET 
+    title = ?, 
+    description = ?, 
+    release_year = ?, 
+    language_id = ?, 
+    original_language_id = ?,
+    rental_duration = ?,
+    rental_rate = ?,
+    length = ?,
+    replacement_cost = ?,
+    rating = ?,
+    special_features = ?
+    where film_id = ?`;
+    if (currentData) {
+        let data = buildUpdateData(id, currentData, updateData);
+        let results = await mysql.exec(sql,data);
+        affectedRows = results.affectedRows;
+    }
+    return affectedRows;
+};
+
+const remove = async (id) => {
+    console.log('remove...');
+    let sql = `delete from film where film_id = ?`;
+    let sql2 = `delete from film_actor where film_id = ?`;
+    let film = await getById(id);
+    console.log('film: '+film);
+    let affectedRows = 0;
+    if (film) {
+        let results = await mysql.exec(sql,[id]);
+        affectedRows = results.affectedRows;
+        if (affectedRows > 0) {
+            await mysql.exec(sql2,[id]);
+        }
+    }
+    return affectedRows;
+};
 
 const searchFilms = (data) => {
     console.log('searchFilms...');
@@ -32,7 +121,7 @@ const searchFilms = (data) => {
     return mysql.exec(sql, [data.genre ? data.genre : '', data.actorLastName ? data.actorLastName : '', data.title ? data.title : '']);
 };
 
-const searchFilmsByActor = (data, resolve, reject) => {
+const searchFilmsByActor = (data) => {
     console.log('searchFilmsByActor...');
 
     let sql = `select film.*,
@@ -71,7 +160,11 @@ const searchFilmsByActor = (data, resolve, reject) => {
 
 let filmRepo = {
     searchFilms: searchFilms,
-    searchFilmsByActor: searchFilmsByActor
+    searchFilmsByActor: searchFilmsByActor,
+    getAllFilms: getAllFilms,
+    insert: insert,
+    update: update,
+    remove: remove
 };
 
 module.exports = filmRepo;

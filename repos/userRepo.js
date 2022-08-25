@@ -21,6 +21,12 @@ const getCustomer = async (email) => {
     return null;
 };
 
+const getAllCustomers = async () => {
+    console.log('getAllCustomers...');
+    let sql = `select * from customer`;
+    return mysql.exec(sql, []);
+}
+
 const getUser = async (email) => {
     console.log('getUser...');
 
@@ -41,7 +47,8 @@ const getUser = async (email) => {
 };
 
 let userRepo = {
-    getUser: getUser
+    getUser: getUser,
+    getAllCustomers: getAllCustomers
 };
 
 module.exports = userRepo;
