@@ -96,7 +96,7 @@ router.route("/login")
 
 // logout
 router.route("/logout")
-.get(verifyToken, (req, res) => {
+.get(verifyToken, (_req, res) => {
     res.status(200).send({ message: "Signed out" });
 });
 

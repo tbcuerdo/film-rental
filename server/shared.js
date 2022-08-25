@@ -9,7 +9,7 @@ exports.isPasswordCorrect = async function (key, password) {
   return bcrypt.compare(password, key).then((result) => result);
 };
 
-const getUsernameFromToken = (token) => jwt.decode(token)["sub"];
+exports.getUsernameFromToken = (token) => jwt.decode(token)["sub"];
 
 exports.getAudienceFromToken = (token) => jwt.decode(token)["aud"];
 
