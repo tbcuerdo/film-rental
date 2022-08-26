@@ -1,0 +1,35 @@
+const mysql = require('../helpers/mysqlconn');
+const _ = require("lodash");
+
+const getByFilmId = async (filmId) => {
+    let sql = `select * from inventory where film_id = ?`;
+    let results = await mysql.exec(sql,[filmId]);
+    if (results.length > 0)
+        return results[0];
+    return null;
+};
+
+const addToInventory = async (data) => {
+    console.log('addToInventory');
+
+    let inventory = await getByFilmId(data.filmId);
+
+    if (!inventory) {
+        let sql = `insert into inventory SET ?`;
+        let data2 = {
+            'film_id': data.filmId,
+            'store_id': data.storeId
+        }
+
+        let results = await mysql.exec(sql,data2);
+        return results.insertId;
+    }
+
+    return null;
+};
+
+let inventoryRepo = {
+    addToInventory: addToInventory
+};
+
+module.exports = inventoryRepo;

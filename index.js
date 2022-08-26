@@ -34,8 +34,8 @@ const swaggerDocs = swaggerJsDoc(swaggerOptions);
 // controllers
 const filmController = require('./controllers/filmController')
 const customerController = require('./controllers/customerController');
-const filmRepo = require('./repos/filmRepo');
 const actorController = require('./controllers/actorController');
+const rentalController = require('./controllers/rentalController');
 
 // Configure middleware to support JSON data parsing in the request object
 app.use(express.json())
@@ -61,6 +61,13 @@ router.route('/customers').get(verifyToken, customerController.searchCustomers);
 router.route('/actors').post(verifyToken, actorController.addActor);
 router.route('/actors/:id').put(verifyToken, actorController.editActor);
 router.route('/actors/:id').delete(verifyToken, actorController.removeActor);
+
+// rentals api
+router.route('/rentals').get(verifyToken, rentalController.searRentals);
+router.route('/rentals/out-of-stock').get(verifyToken, rentalController.getOutOfStockFilms);
+router.route('/rentals/overdue').get(verifyToken, rentalController.getOverdueRentals);
+router.route('/rentals').post(verifyToken, rentalController.addRental);
+router.route('/rentals/:id').put(verifyToken, rentalController.editRental);
 
 // login
 router.route("/login")
