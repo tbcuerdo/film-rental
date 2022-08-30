@@ -129,7 +129,7 @@ const addFilm = async (req, res, next) => {
                     "status": 201,
                     "statusText": "CREATED",
                     "message": "Film successfully saved.",
-                    "data": id
+                    "data": { "id" : id }
                 })
             }
         }
@@ -155,7 +155,7 @@ const editFilm = async (req, res, next) => {
                     "status": 200,
                     "statusText": "UPDATED",
                     "message": "Film successfully updated.",
-                    "data": { id }
+                    "data": { "id" : id }
                 });
             } else {
                 res.status(500).json({

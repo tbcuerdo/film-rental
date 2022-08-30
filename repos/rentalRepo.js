@@ -51,7 +51,7 @@ const addRental = async (data) => {
         };
 
         let results = await mysql.exec(sql,data2);
-        return results.insertId;
+        return { "id": results.insertId, "inventoryId": data2.inventory_id };
     } else {
         throw new Error('Inventory item is not yet returned.');
     }
@@ -94,75 +94,52 @@ const editRental = async (id, updateData) => {
 };
 
 const getOutOfStockFilms = async () => {
-    let sql = `select film_id, category, title, next_available_at, concat(address,', ',city,' City') as next_available_in from (
-        select
-                f.film_id,
-                c.name as 'category',
-                f.title,
-                (film_inv.orig_units - count(i.inventory_id)) as on_hand,
-                return_dates.earliest as next_available_at,
-                return_dates.address,
-                return_dates.city
+    let sql = `SELECT
+            f.* ,
+            total_rentals.cnt as all_rentals,
+            total_returned.cnt as returned
         from
+            film f
+        join (
+            select
+                f.film_id,
+                count(r.rental_id) as cnt
+            from
                 inventory i
-        join film f 
+            join film f 
+            on
+                f.film_id = i.film_id
+            join rental r 
+            on
+                i.inventory_id = r.inventory_id
+            group by
+                f.film_id
+        )
+        as total_rentals
         on
-                i.film_id = f.film_id
-        join film_category fc 
-        on f.film_id = fc.film_id 
-        join category c 
-        on fc.category_id = c.category_id
-        join rental r 
-        on
-                r.inventory_id = i.inventory_id
+            f.film_id = total_rentals.film_id
         left join (
             select
                 f.film_id,
-                f.title,
-                count(i.inventory_id) as orig_units
+                count(r.rental_id) as cnt
             from
-                    inventory i
+                inventory i
             join film f 
-            on
-                    i.film_id = f.film_id
-            group by
-                f.film_id,
-                f.title
-        ) film_inv
         on
-            f.film_id = film_inv.film_id
-        left join (
-            select f.film_id, MIN(DATE_ADD(r.rental_date, INTERVAL f.rental_duration DAY)) as earliest, a.address, c2.city 
-            from rental r 
-            join inventory i 
-            on r.inventory_id = i.inventory_id 
-            join film f 
-            on i.film_id = f.film_id
-            join staff s2
-            on r.staff_id = s2.staff_id
-            join store s3
-            on s2.store_id = s3.store_id  
-            join address a
-            on s3.address_id  = a.address_id
-            join city c2 
-            on a.city_id = c2.city_id
-            group by f.film_id, a.address, c2.city
-        ) return_dates
-        on f.film_id = return_dates.film_id 
+                f.film_id = i.film_id
+            join rental r 
+        on
+                i.inventory_id = r.inventory_id
+            where
+                r.return_date is not null
+            group by
+                f.film_id 
+        )
+        as total_returned
+        on
+            f.film_id = total_returned.film_id
         where
-                r.return_date is null
-        group by
-                f.film_id,
-                f.title,
-                c.name,
-                return_dates.earliest,
-                return_dates.address,
-                return_dates.city
-        order by
-            c.name,
-            f.title
-        ) stock
-        where stock.on_hand = 0`;
+            total_returned.cnt is null`;
 
         return mysql.exec(sql,[]);
 };

@@ -5,7 +5,7 @@ const router = express.Router();
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
-require("dotenv").config({ path: "./server/variables.env" });
+require("dotenv").config({ path: `./server/variables.env.${(process.env.NODE_ENV || 'node')}` });
 const cors = require("cors");
 const {
     getUserByUsername,
@@ -110,6 +110,8 @@ router.route("/logout")
 // set base url
 app.use('/api', router);
 
-app.listen('4242', () => {
+let server = app.listen(process.env.SERVER_PORT, () => {
     console.log('Express server is running...');
 });
+
+module.exports = server;

@@ -18,7 +18,7 @@ const addActor = async (req, res, next) => {
                     "status": 201,
                     "statusText": "CREATED",
                     "message": "Actor successfully saved.",
-                    "data": id
+                    "data": { "id": id }
                 })
             }
         }
@@ -44,7 +44,7 @@ const editActor = async (req, res, next) => {
                     "status": 200,
                     "statusText": "UPDATED",
                     "message": "Actor successfully updated.",
-                    "data": { id }
+                    "data": { "id": id }
                 });
             } else {
                 res.status(500).json({
@@ -74,7 +74,7 @@ const removeActor = async (req, res, next) => {
                     "status": 200,
                     "statusText": "DELETED",
                     "message": "Actor successfully removed.",
-                    "data": {id}
+                    "data": { "id": id}
                 })
             } else {
                 res.status(500).json({

@@ -12,13 +12,13 @@ const addRental = async (req, res, next) => {
             res.status(401).send({ message: "Not Authorized to access data" });
         } else {
             let newData = req.body;
-            let id = await rentalRepo.addRental(newData);
-            if (id) {
+            let data = await rentalRepo.addRental(newData);
+            if (data) {
                 res.status(201).json({
                     "status": 201,
                     "statusText": "CREATED",
                     "message": "Rental successfully saved.",
-                    "data": id
+                    "data": { id: data.id, inventoryId: data.inventoryId }
                 })
             }
         }
@@ -43,7 +43,7 @@ const editRental = async (req, res, next) => {
                     "status": 200,
                     "statusText": "UPDATED",
                     "message": "Rental successfully updated.",
-                    "data": { id }
+                    "data": { "id": id }
                 });
             } else {
                 res.status(500).json({
